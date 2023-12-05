@@ -22,7 +22,7 @@ def jump_to_next_timestamp(player, timestamps, current_index):
 
 # 主函数
 def main():
-    video_filename = "example_video_00-10-20_00-20-30.mp4"  # 假设的文件名
+    video_filename = "/Users/huangyingw/mini/media/usb_backup_crypt_8T_1/cartoon/dragonball/第一部/龙珠 第一部 日语配音/七龙珠146.rmvb:13:57,:09:56"
     timestamps = extract_timestamps(video_filename)
     if not timestamps:
         print("未找到时间戳")
