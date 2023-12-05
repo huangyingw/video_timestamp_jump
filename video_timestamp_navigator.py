@@ -1,12 +1,17 @@
 import re
 import vlc
+from datetime import timedelta
 from pynput.keyboard import Listener, Key
 
 
 # 提取时间戳的函数
 def extract_timestamps(filename):
-    pattern = r"\d{2}-\d{2}-\d{2}"  # HH-MM-SS格式
-    return re.findall(pattern, filename)
+    # 匹配冒号后的第一个时间戳，以及随后的逗号分隔的时间戳
+    pattern = r":(\d{2}:\d{2}:\d{2})|,(\d{2}:\d{2}:\d{2})"
+    matches = re.findall(pattern, filename)
+    # 从匹配结果中提取时间戳
+    timestamps = [ts for match in matches for ts in match if ts]
+    return timestamps
 
 
 # 跳转至下一个时间戳的函数
@@ -20,6 +25,14 @@ def jump_to_next_timestamp(player, timestamps, current_index):
         print(f"跳转至: {ts}")
 
 
+def timestamp_to_seconds(timestamp):
+    # 将时间戳转换为秒数
+    hours, minutes, seconds = map(int, timestamp.split(":"))
+    return timedelta(
+        hours=hours, minutes=minutes, seconds=seconds
+    ).total_seconds()
+
+
 # 主函数
 def main():
     video_filename = "/Users/huangyingw/mini/media/usb_backup_crypt_8T_1/cartoon/dragonball/第一部/龙珠 第一部 日语配音/七龙珠146.rmvb:13:57,:09:56"
@@ -27,6 +40,12 @@ def main():
     if not timestamps:
         print("未找到时间戳")
         return
+    # 将时间戳转换为秒数并排序
+    timestamps_in_seconds = sorted(
+        [timestamp_to_seconds(ts) for ts in timestamps]
+    )
+
+    print(timestamps_in_seconds)  # 输出排序后的时间戳（秒数）
 
     # 初始化VLC播放器
     player = vlc.MediaPlayer(video_filename)
