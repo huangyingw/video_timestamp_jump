@@ -1,0 +1,8 @@
+[deploy]
+	host = localhost
+	path = ~/loadrc/video_timestamp_jump
+[remote "origin"]
+	url = git@github.com:huangyingw/video_timestamp_jump.git
+	fetch = +refs/heads/*:refs/remotes/origin/*
+[push]
+    remote = origin
