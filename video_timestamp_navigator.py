@@ -6,7 +6,7 @@ from pynput.keyboard import Listener, Key
 
 # 提取时间戳的函数
 def extract_timestamps(filename):
-    # 匹配冒号或逗号后的 HH:MM 或 H:MM:SS 格式的时间戳
+    # 匹配冒号或逗号后的 MM:SS 或 H:MM:SS 格式的时间戳
     pattern = r"[:,](\d{1,2}:\d{2}(?::\d{2})?)"
     return re.findall(pattern, filename)
 
@@ -16,8 +16,8 @@ def jump_to_next_timestamp(player, timestamps, current_index):
     if current_index[0] < len(timestamps) - 1:
         current_index[0] += 1
         ts = timestamps[current_index[0]]
-        hours, minutes, seconds = map(int, ts.split("-"))
-        time_milliseconds = (hours * 3600 + minutes * 60 + seconds) * 1000
+        time_seconds = timestamp_to_seconds(ts)
+        time_milliseconds = int(time_seconds * 1000)
         player.set_time(time_milliseconds)
         print(f"跳转至: {ts}")
 
@@ -32,7 +32,9 @@ def timestamp_to_seconds(timestamp):
     else:
         raise ValueError(f"无效的时间戳格式: {timestamp}")
 
-    return timedelta(hours=hours, minutes=minutes, seconds=seconds).total_seconds()
+    return timedelta(
+        hours=hours, minutes=minutes, seconds=seconds
+    ).total_seconds()
 
 
 # 主函数
@@ -41,7 +43,6 @@ def main():
     timestamps = extract_timestamps(video_filename)
     if not timestamps:
         print("未找到时间戳")
-        return
     # 将时间戳转换为秒数并排序
     timestamps_in_seconds = sorted(
         [timestamp_to_seconds(ts) for ts in timestamps]
@@ -53,7 +54,11 @@ def main():
     player = vlc.MediaPlayer(video_filename)
     player.play()
 
-    current_index = [0]  # 当前时间戳索引
+    # 确保有足够时间加载媒体
+    while not player.is_playing():
+        pass
+
+    current_index = [0]
 
     # 定义按键事件处理函数
     def on_press(key):
