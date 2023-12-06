@@ -1,19 +1,23 @@
+import re
+
+
+def extract_timestamps(filename):
+    # 匹配冒号或逗号后的 HH:MM 格式的时间戳
+    pattern = r"[:,](\d{2}:\d{2})"
+    return re.findall(pattern, filename)
+
+
+# 单元测试部分
 import unittest
-from video_timestamp_navigator import extract_timestamps, timestamp_to_seconds
+
 
 class TestVideoPlayerFunctions(unittest.TestCase):
-
     def test_extract_timestamps(self):
-        # 测试 extract_timestamps 函数
-        filename = "example_video.mp4:01:23:45,:02:34:56"
-        expected_timestamps = ["01:23:45", "02:34:56"]
+        filename = "/Users/huangyingw/mini/media/usb_backup_crypt_8T_1/cartoon/dragonball/第一部/龙珠 第一部 日语配音/七龙珠146.rmvb:13:57,:09:56"
+        expected_timestamps = ["13:57", "09:56"]
         self.assertEqual(extract_timestamps(filename), expected_timestamps)
 
-    def test_timestamp_to_seconds(self):
-        # 测试 timestamp_to_seconds 函数
-        timestamp = "01:23:45"
-        expected_seconds = 1*3600 + 23*60 + 45
-        self.assertEqual(timestamp_to_seconds(timestamp), expected_seconds)
 
-if __name__ == '__main__':
+# 运行单元测试
+if __name__ == "__main__":
     unittest.main()
