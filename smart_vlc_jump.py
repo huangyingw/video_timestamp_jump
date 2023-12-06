@@ -18,7 +18,7 @@ def on_press(key):
     global current_index
     try:
         # 检测按键是否为'j'
-        if key.char == "j":
+        if key.char == "h":
             current_index = (current_index + 1) % len(timestamps)
             # 构建跳转命令
             command = f"seek {timestamps[current_index]}"
