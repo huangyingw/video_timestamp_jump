@@ -3,7 +3,9 @@ SCRIPT=$(realpath "$0")
 SCRIPTPATH=$(dirname "$SCRIPT")
 cd "$SCRIPTPATH"
 
-pip install python-vlc pynput
+#which python
+#which python3
+#pip install python-vlc pynput
 python ./video_timestamp_navigator.py
 
 cd -
