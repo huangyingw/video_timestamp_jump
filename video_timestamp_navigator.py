@@ -4,6 +4,11 @@ from datetime import timedelta
 from pynput.keyboard import Listener, Key
 
 
+# 转义文件路径中的冒号
+def escape_colons_in_path(file_path):
+    return file_path.replace(":", "\\:")
+
+
 # 提取时间戳的函数
 def extract_timestamps(filename):
     # 匹配冒号或逗号后的 MM:SS 或 H:MM:SS 格式的时间戳
@@ -39,8 +44,9 @@ def timestamp_to_seconds(timestamp):
 
 # 主函数
 def main():
-    video_filename = "/Users/huangyingw/mini/media/usb_backup_crypt_8T_1/cartoon/dragonball/第一部/龙珠 第一部 日语配音/七龙珠146.rmvb:13:57,:09:56"
-    timestamps = extract_timestamps(video_filename)
+    original_video_filename = "/Users/huangyingw/mini/media/usb_backup_crypt_8T_1/cartoon/dragonball/第一部/龙珠 第一部 日语配音/七龙珠146.rmvb:13:57,:09:56"
+    escaped_video_filename = escape_colons_in_path(original_video_filename)
+    timestamps = extract_timestamps(original_video_filename)
     if not timestamps:
         print("未找到时间戳")
     # 将时间戳转换为秒数并排序
@@ -50,8 +56,7 @@ def main():
 
     print(timestamps_in_seconds)  # 输出排序后的时间戳（秒数）
 
-    # 初始化VLC播放器
-    player = vlc.MediaPlayer(video_filename)
+    player = vlc.MediaPlayer(escaped_video_filename)
     player.play()
 
     # 确保有足够时间加载媒体
