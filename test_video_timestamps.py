@@ -1,12 +1,6 @@
 import re
 
 
-def extract_timestamps(filename):
-    # 匹配冒号或逗号后的 HH:MM 或 H:MM:SS 格式的时间戳
-    pattern = r"[:,](\d{1,2}:\d{2}(?::\d{2})?)"
-    return re.findall(pattern, filename)
-
-
 # 单元测试部分
 import unittest
 
