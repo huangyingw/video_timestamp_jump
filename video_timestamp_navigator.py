@@ -6,12 +6,9 @@ from pynput.keyboard import Listener, Key
 
 # 提取时间戳的函数
 def extract_timestamps(filename):
-    # 匹配冒号后的第一个时间戳，以及随后的逗号分隔的时间戳
-    pattern = r":(\d{2}:\d{2}:\d{2})|,(\d{2}:\d{2}:\d{2})"
-    matches = re.findall(pattern, filename)
-    # 从匹配结果中提取时间戳
-    timestamps = [ts for match in matches for ts in match if ts]
-    return timestamps
+    # 匹配冒号或逗号后的 HH:MM 或 H:MM:SS 格式的时间戳
+    pattern = r"[:,](\d{1,2}:\d{2}(?::\d{2})?)"
+    return re.findall(pattern, filename)
 
 
 # 跳转至下一个时间戳的函数
