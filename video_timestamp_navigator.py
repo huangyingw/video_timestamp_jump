@@ -23,11 +23,16 @@ def jump_to_next_timestamp(player, timestamps, current_index):
 
 
 def timestamp_to_seconds(timestamp):
-    # 将时间戳转换为秒数
-    hours, minutes, seconds = map(int, timestamp.split(":"))
-    return timedelta(
-        hours=hours, minutes=minutes, seconds=seconds
-    ).total_seconds()
+    parts = timestamp.split(":")
+    if len(parts) == 2:  # 只有分钟和秒
+        minutes, seconds = map(int, parts)
+        hours = 0
+    elif len(parts) == 3:  # 包含小时、分钟和秒
+        hours, minutes, seconds = map(int, parts)
+    else:
+        raise ValueError(f"无效的时间戳格式: {timestamp}")
+
+    return timedelta(hours=hours, minutes=minutes, seconds=seconds).total_seconds()
 
 
 # 主函数
