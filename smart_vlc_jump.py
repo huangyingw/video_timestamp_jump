@@ -35,6 +35,11 @@ def on_press(key):
             current_index = (current_index + 1) % len(timestamps)
             # 发送跳转命令到 VLC
             send_command_to_vlc(f"seek&val={timestamps[current_index]}")
+        elif key.char == "n":
+            # 按下 'n' 键时终止 VLC 进程和监听器
+            vlc_process.kill()
+            listener.stop()
+            return False  # 停止监听器
     except AttributeError:
         pass
 
@@ -45,8 +50,7 @@ listener.start()
 
 # 让主线程继续运行
 try:
-    while True:
-        pass
+    listener.join()  # 等待监听器结束
 except KeyboardInterrupt:
     # 关闭VLC和监听器
     vlc_process.kill()
