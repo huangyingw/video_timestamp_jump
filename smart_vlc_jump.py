@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import os
+from threading import Lock
 import sys
 import subprocess
 import re
@@ -57,9 +58,16 @@ def send_command_to_vlc(command):
 
 class VLCController:
     def __init__(self, file_path):
+        self.load_file(file_path)
+
+    def load_file(self, file_path):
         self.file_path = file_path
         self.timestamps = extract_timestamps(file_path)
         self.current_index = 0
+        self.file_path = file_path
+        self.timestamps = extract_timestamps(file_path)
+        self.current_index = 0
+        self.index_lock = Lock()
 
         # 准备 VLC 的启动参数
         vlc_args = [
@@ -74,7 +82,7 @@ class VLCController:
         ]
 
         # 使用 subprocess.Popen 在后台启动 VLC
-        self.vlc_process = subprocess.run(
+        self.vlc_process = subprocess.Popen(
             vlc_args,
             stdout=subprocess.DEVNULL,  # 将标准输出重定向到 DEVNULL
             stderr=subprocess.DEVNULL,  # 将标准错误重定向到 DEVNULL
@@ -86,18 +94,14 @@ class VLCController:
     def on_press(self, key):
         try:
             if key.char == "h":
-                self.current_index = (self.current_index + 1) % len(
-                    self.timestamps
-                )
-                print(
-                    "Jumping to timestamp:",
-                    self.timestamps[self.current_index],
-                )
-                timestamp_in_second = int(
-                    timestamp_to_seconds(self.timestamps[self.current_index])
-                )
-                print("Jumping to timestamp_in_second:", timestamp_in_second)
-                # 发送跳转命令到 VLC
+                with self.index_lock:  # 使用锁来保护对 self.current_index 的访问
+                    self.current_index = (self.current_index + 1) % len(
+                        self.timestamps
+                    )
+                    timestamp = self.timestamps[self.current_index]
+
+                print("Jumping to timestamp:", timestamp)
+                timestamp_in_second = int(timestamp_to_seconds(timestamp))
                 send_command_to_vlc(f"seek&val={timestamp_in_second}")
             elif key.char == "n":
                 self.vlc_process.kill()
