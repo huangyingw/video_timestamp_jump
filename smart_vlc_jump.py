@@ -1,3 +1,4 @@
+import sys
 import subprocess
 import re
 import threading
@@ -10,10 +11,8 @@ vlc_ip = "localhost"
 vlc_port = 8080  # 更改为你的 VLC HTTP 端口
 vlc_password = "vlc_password"  # 如果设置了密码，请填写
 
-# VLC的路径和要播放的文件路径
+# VLC的路径
 vlc_path = "/Applications/VLC.app/Contents/MacOS/VLC"
-# file_path = "/Users/huangyingw/mini/media/usb_backup_crypt_8T_1/cartoon/dragonball/第一部/龙珠 第一部 日语配音/七龙珠110.rmvb"
-file_path = "/Users/huangyingw/mini/media/usb_backup_crypt_8T_1/cartoon/dragonball/第一部/龙珠 第一部 日语配音/七龙珠146.rmvb:13:57,:09:56"
 
 
 # 提取时间戳的函数
@@ -38,14 +37,6 @@ def timestamp_to_seconds(timestamp):
     ).total_seconds()
 
 
-# 从文件名解析时间戳数组
-timestamps = extract_timestamps(file_path)
-current_index = 0
-
-# 启动VLC
-vlc_process = subprocess.Popen([vlc_path, "--fullscreen", file_path])
-
-
 # 发送命令到 VLC 的函数
 def send_command_to_vlc(command):
     url = f"http://{vlc_ip}:{vlc_port}/requests/status.xml?command={command}"
@@ -61,37 +52,54 @@ def send_command_to_vlc(command):
         print(f"Error sending request: {e}")  # 打印请求错误信息
 
 
-# 监听键盘事件的函数
-def on_press(key):
-    global current_index
+class VLCController:
+    def __init__(self, file_path):
+        self.file_path = file_path
+        self.timestamps = extract_timestamps(file_path)
+        self.current_index = 0
+        self.vlc_process = subprocess.Popen(
+            [vlc_path, "--fullscreen", file_path]
+        )
+        self.listener = keyboard.Listener(on_press=self.on_press)
+        self.listener.start()
+
+    def on_press(self, key):
+        try:
+            if key.char == "h":
+                self.current_index = (self.current_index + 1) % len(
+                    self.timestamps
+                )
+                print(
+                    "Jumping to timestamp:",
+                    self.timestamps[self.current_index],
+                )
+                timestamp_in_second = int(
+                    timestamp_to_seconds(self.timestamps[self.current_index])
+                )
+                print("Jumping to timestamp_in_second:", timestamp_in_second)
+                # 发送跳转命令到 VLC
+                send_command_to_vlc(f"seek&val={timestamp_in_second}")
+            elif key.char == "n":
+                self.vlc_process.kill()
+                self.listener.stop()
+                return False
+        except AttributeError:
+            pass
+
+
+def main(file_path):
+    controller = VLCController(file_path)
     try:
-        if key.char == "h":
-            current_index = (current_index + 1) % len(timestamps)
-            # 打印即将跳转到的时间戳
-            print("Jumping to timestamp:", timestamps[current_index])
-            timestamp_in_second = int(
-                timestamp_to_seconds(timestamps[current_index])
-            )
-            print("Jumping to timestamp_in_second:", timestamp_in_second)
-            # 发送跳转命令到 VLC
-            send_command_to_vlc(f"seek&val={timestamp_in_second}")
-        elif key.char == "n":
-            # 按下 'n' 键时终止 VLC 进程和监听器
-            vlc_process.kill()
-            listener.stop()
-            return False  # 停止监听器
-    except AttributeError:
-        pass
+        controller.listener.join()  # 等待监听器结束
+    except KeyboardInterrupt:
+        controller.vlc_process.kill()
+        controller.listener.stop()
 
 
-# 监听键盘事件
-listener = keyboard.Listener(on_press=on_press)
-listener.start()
+if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        print("Usage: python vlc.py [file_path]")
+        sys.exit(1)
 
-# 让主线程继续运行
-try:
-    listener.join()  # 等待监听器结束
-except KeyboardInterrupt:
-    # 关闭VLC和监听器
-    vlc_process.kill()
-    listener.stop()
+    file_path = sys.argv[1]
+    main(file_path)
