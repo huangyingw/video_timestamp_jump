@@ -1,3 +1,4 @@
+import os
 import sys
 import subprocess
 import re
@@ -97,9 +98,14 @@ def main(file_path):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("Usage: python vlc.py [file_path]")
+    if len(sys.argv) < 3:
+        print("Usage: python smart_vlc_jump.py [root_dir] [cur_line]")
         sys.exit(1)
 
-    file_path = sys.argv[1]
+    root_dir = sys.argv[1]
+    cur_line = sys.argv[2]
+
+    # 构建完整的文件路径
+    file_path = os.path.join(root_dir, cur_line)
+
     main(file_path)
