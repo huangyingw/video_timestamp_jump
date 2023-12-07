@@ -1,6 +1,12 @@
 import subprocess
 import threading
+import requests
 from pynput import keyboard
+
+# VLC HTTP 接口设置
+vlc_ip = "localhost"
+vlc_port = 8080  # 更改为你的 VLC HTTP 端口
+vlc_password = "vlc_password"  # 如果设置了密码，请填写
 
 # VLC的路径和要播放的文件路径
 vlc_path = "/Applications/VLC.app/Contents/MacOS/VLC"
@@ -14,16 +20,20 @@ current_index = 0
 vlc_process = subprocess.Popen([vlc_path, file_path])
 
 
+# 发送命令到 VLC 的函数
+def send_command_to_vlc(command):
+    url = f"http://{vlc_ip}:{vlc_port}/requests/status.xml?command={command}"
+    requests.get(url, auth=("", vlc_password))
+
+
+# 监听键盘事件的函数
 def on_press(key):
     global current_index
     try:
-        # 检测按键是否为'j'
         if key.char == "h":
             current_index = (current_index + 1) % len(timestamps)
-            # 构建跳转命令
-            command = f"seek {timestamps[current_index]}"
-            # 发送命令到VLC
-            vlc_process.communicate(input=command.encode())
+            # 发送跳转命令到 VLC
+            send_command_to_vlc(f"seek&val={timestamps[current_index]}")
     except AttributeError:
         pass
 
