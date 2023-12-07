@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import os
 import sys
 import subprocess
@@ -99,13 +100,20 @@ def main(file_path):
 
 if __name__ == "__main__":
     if len(sys.argv) < 3:
-        print("Usage: python smart_vlc_jump.py [root_dir] [cur_line]")
+        print("Usage: python smart_vlc_jump.py [dir_path] [line]")
         sys.exit(1)
 
-    root_dir = sys.argv[1]
-    cur_line = sys.argv[2]
+    dir_path = sys.argv[1]
+    line = sys.argv[2]
+
+    # 移除可能的引号
+    line = line.strip('"')
+
+    # 检查并处理可能存在的文件大小数字
+    if re.match(r"^\d+,", line):
+        line = line.split(",", 1)[1]
 
     # 构建完整的文件路径
-    file_path = os.path.join(root_dir, cur_line)
+    file_path = os.path.join(dir_path, line)
 
     main(file_path)
