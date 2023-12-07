@@ -18,7 +18,7 @@ timestamps = [10, 20, 30]  # 示例时间戳，单位为秒
 current_index = 0
 
 # 启动VLC
-vlc_process = subprocess.Popen([vlc_path, file_path])
+vlc_process = subprocess.Popen([vlc_path, "--fullscreen", file_path])
 
 
 # 发送命令到 VLC 的函数
