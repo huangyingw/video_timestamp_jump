@@ -21,22 +21,23 @@ vlc_path = "/Applications/VLC.app/Contents/MacOS/VLC"
 def extract_timestamps(filename):
     # 匹配冒号或逗号后的 MM:SS 或 H:MM:SS 格式的时间戳
     pattern = r"[:,](\d{1,2}:\d{2}(?::\d{2})?)"
-    return re.findall(pattern, filename)
+    timestamps = re.findall(pattern, filename)
+    # 将时间戳转换为秒并排序
+    return sorted(timestamps, key=timestamp_to_seconds)
 
 
 def timestamp_to_seconds(timestamp):
     parts = timestamp.split(":")
     if len(parts) == 2:  # 只有分钟和秒
         minutes, seconds = map(int, parts)
-        hours = 0
+        total_seconds = minutes * 60 + seconds
     elif len(parts) == 3:  # 包含小时、分钟和秒
         hours, minutes, seconds = map(int, parts)
+        total_seconds = hours * 3600 + minutes * 60 + seconds
     else:
         raise ValueError(f"无效的时间戳格式: {timestamp}")
 
-    return timedelta(
-        hours=hours, minutes=minutes, seconds=seconds
-    ).total_seconds()
+    return total_seconds
 
 
 # 发送命令到 VLC 的函数
@@ -73,7 +74,7 @@ class VLCController:
         ]
 
         # 使用 subprocess.Popen 在后台启动 VLC
-        self.vlc_process = subprocess.Popen(
+        self.vlc_process = subprocess.run(
             vlc_args,
             stdout=subprocess.DEVNULL,  # 将标准输出重定向到 DEVNULL
             stderr=subprocess.DEVNULL,  # 将标准错误重定向到 DEVNULL
