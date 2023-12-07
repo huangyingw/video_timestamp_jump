@@ -59,10 +59,26 @@ class VLCController:
         self.file_path = file_path
         self.timestamps = extract_timestamps(file_path)
         self.current_index = 0
-        # 启动 VLC 时设置播放速度为两倍
+
+        # 准备 VLC 的启动参数
+        vlc_args = [
+            vlc_path,
+            "--sub-language",
+            "Chinese",
+            "--sub-autodetect-file",
+            "-f",  # 全屏播放
+            "--macosx-continue-playback=2",
+            "--rate=2.0",  # 两倍速播放
+            file_path,
+        ]
+
+        # 使用 subprocess.Popen 在后台启动 VLC
         self.vlc_process = subprocess.Popen(
-            [vlc_path, "--fullscreen", "--rate=2", file_path]
+            vlc_args,
+            stdout=subprocess.DEVNULL,  # 将标准输出重定向到 DEVNULL
+            stderr=subprocess.DEVNULL,  # 将标准错误重定向到 DEVNULL
         )
+
         self.listener = keyboard.Listener(on_press=self.on_press)
         self.listener.start()
 
