@@ -8,8 +8,8 @@ import unittest
 
 class TestVideoPlayerFunctions(unittest.TestCase):
     def test_extract_timestamps(self):
-        filename = "/Users/huangyingw/mini/media/usb_backup_crypt_8T_1/cartoon/dragonball/第一部/龙珠 第一部 日语配音/七龙珠146.rmvb:24:30,:1:11:27,:02:35:52"
-        expected_timestamps = ["24:30", "1:11:27", "02:35:52"]
+        filename = "/Users/huangyingw/mini/media/usb_backup_crypt_8T_1/cartoon/dragonball/第一部/龙珠 第一部 日语配音/七龙珠146.mp4:24:30,:1:11:27,1:40:56,:02:35:52"
+        expected_timestamps = ["24:30", "1:11:27", "1:40:56", "02:35:52"]
         self.assertEqual(extract_timestamps(filename), expected_timestamps)
 
         filename = "/Users/huangyingw/mini/media/usb_backup_crypt_8T_1/cartoon/dragonball/第一部/龙珠 第一部 日语配音/七龙珠146.rmvb:24:30,1:11:27,:02:35:52"
