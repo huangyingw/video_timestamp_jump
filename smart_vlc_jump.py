@@ -59,8 +59,9 @@ class VLCController:
         self.file_path = file_path
         self.timestamps = extract_timestamps(file_path)
         self.current_index = 0
+        # 启动 VLC 时设置播放速度为两倍
         self.vlc_process = subprocess.Popen(
-            [vlc_path, "--fullscreen", file_path]
+            [vlc_path, "--fullscreen", "--rate=2", file_path]
         )
         self.listener = keyboard.Listener(on_press=self.on_press)
         self.listener.start()
