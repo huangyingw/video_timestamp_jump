@@ -103,6 +103,18 @@ class VLCController:
                 print("Jumping to timestamp:", timestamp)
                 timestamp_in_second = int(timestamp_to_seconds(timestamp))
                 send_command_to_vlc(f"seek&val={timestamp_in_second}")
+            elif key.char == "l":
+                with self.index_lock:
+                    # 确保索引不会变成负数
+                    if self.current_index == 0:
+                        self.current_index = len(self.timestamps) - 1
+                    else:
+                        self.current_index -= 1
+                    timestamp = self.timestamps[self.current_index]
+
+                print("Rewinding to timestamp:", timestamp)
+                timestamp_in_second = int(timestamp_to_seconds(timestamp))
+                send_command_to_vlc(f"seek&val={timestamp_in_second}")
             elif key.char == "n":
                 self.vlc_process.kill()
                 self.listener.stop()
