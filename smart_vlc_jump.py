@@ -44,6 +44,7 @@ def timestamp_to_seconds(timestamp):
     else:
         raise ValueError(f"无效的时间戳格式: {timestamp}")
 
+    print(f"转换时间戳 '{timestamp}' 为 {total_seconds} 秒")
     return total_seconds
 
 
@@ -76,11 +77,12 @@ def get_current_vlc_timestamp():
     return "0:00"
 
 
-def jump_to_timestamp(timestamp):
-    # 转换时间戳为 VLC 可接受的格式
-    timestamp_str = str(timedelta(seconds=timestamp))
-    # 发送跳转命令到 VLC
-    send_command_to_vlc(f"seek&val={timestamp_str}")
+def jump_to_timestamp(timestamp_str):
+    # 首先，将时间戳字符串转换为秒
+    timestamp_seconds = timestamp_to_seconds(timestamp_str)
+    print(f"跳转到 {timestamp_seconds} 秒 ({timestamp_str})")
+    # 发送跳转命令到 VLC（使用以秒为单位的时间）
+    send_command_to_vlc(f"seek&val={timestamp_seconds}")
 
 
 def find_nearest_timestamp_index(timestamps, current_seconds, direction):
@@ -147,6 +149,9 @@ class VLCController:
         # 找到最接近的时间戳
         nearest_timestamp_index = find_nearest_timestamp_index(
             timestamps, current_seconds, direction
+        )
+        print(
+            f"最近的时间戳索引为 {nearest_timestamp_index}, 时间戳: {timestamps[nearest_timestamp_index]}"
         )
 
         # 如果找到有效的时间戳索引
