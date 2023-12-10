@@ -3,11 +3,13 @@ import os
 from threading import Lock
 import sys
 import subprocess
+import json
 import re
 import threading
 from datetime import timedelta
 import requests
 from pynput import keyboard
+from moviepy.editor import VideoFileClip
 
 # VLC HTTP 接口设置
 vlc_ip = "localhost"
@@ -23,6 +25,10 @@ def extract_timestamps(filename):
     # 匹配冒号或逗号后的 MM:SS 或 H:MM:SS 格式的时间戳
     pattern = r"[:,](\d{1,2}:\d{2}(?::\d{2})?)"
     timestamps = re.findall(pattern, filename)
+
+    # 添加视频开始和结束时间
+    timestamps.insert(0, "0:00")
+    timestamps.append("8:00:00")
     # 将时间戳转换为秒并排序
     return sorted(timestamps, key=timestamp_to_seconds)
 
@@ -54,6 +60,48 @@ def send_command_to_vlc(command):
             print(f"Response Content: {response.text}")  # 打印响应内容（如果有错误）
     except Exception as e:
         print(f"Error sending request: {e}")  # 打印请求错误信息
+
+
+def get_current_vlc_timestamp():
+    # 发送请求到 VLC HTTP API
+    response = requests.get(
+        f"http://{vlc_ip}:{vlc_port}/requests/status.json",
+        auth=("", vlc_password),
+    )
+    if response.status_code == 200:
+        data = response.json()
+        # 计算当前播放时间（秒）
+        current_time = int(data.get("time", 0))
+        return str(timedelta(seconds=current_time))
+    return "0:00"
+
+
+def jump_to_timestamp(timestamp):
+    # 转换时间戳为 VLC 可接受的格式
+    timestamp_str = str(timedelta(seconds=timestamp))
+    # 发送跳转命令到 VLC
+    send_command_to_vlc(f"seek&val={timestamp_str}")
+
+
+def find_nearest_timestamp_index(timestamps, current_seconds, direction):
+    # 将所有时间戳转换为秒
+    timestamp_seconds = [timestamp_to_seconds(ts) for ts in timestamps]
+    # 找到当前时间戳的最接近值
+    if direction == "left":
+        # 找到小于等于当前时间戳的最大值
+        nearest_timestamps = [
+            ts for ts in timestamp_seconds if ts <= current_seconds
+        ]
+        if nearest_timestamps:
+            return timestamp_seconds.index(max(nearest_timestamps))
+    elif direction == "right":
+        # 找到大于当前时间戳的最小值
+        nearest_timestamps = [
+            ts for ts in timestamp_seconds if ts > current_seconds
+        ]
+        if nearest_timestamps:
+            return timestamp_seconds.index(min(nearest_timestamps))
+    return None
 
 
 class VLCController:
@@ -91,36 +139,41 @@ class VLCController:
         self.listener = keyboard.Listener(on_press=self.on_press)
         self.listener.start()
 
+    def jump_to_nearest_timestamp(self, current_timestamp, direction="left"):
+        # 获取所有时间戳
+        timestamps = extract_timestamps(self.file_path)
+        # 将当前时间戳转换为秒
+        current_seconds = timestamp_to_seconds(current_timestamp)
+        # 找到最接近的时间戳
+        nearest_timestamp_index = find_nearest_timestamp_index(
+            timestamps, current_seconds, direction
+        )
+
+        # 如果找到有效的时间戳索引
+        if nearest_timestamp_index is not None:
+            # 跳转到该时间戳
+            jump_to_timestamp(timestamps[nearest_timestamp_index])
+
     def on_press(self, key):
+        print(f"按键被按下: {key}")  # 调试信息
         try:
-            if key.char == "h":
-                with self.index_lock:  # 使用锁来保护对 self.current_index 的访问
-                    self.current_index = (self.current_index + 1) % len(
-                        self.timestamps
+            if hasattr(key, "char"):
+                if key.char == "h":  # 向左跳转
+                    current_timestamp = get_current_vlc_timestamp()
+                    self.jump_to_nearest_timestamp(
+                        current_timestamp, direction="left"
                     )
-                    timestamp = self.timestamps[self.current_index]
-
-                print("Jumping to timestamp:", timestamp)
-                timestamp_in_second = int(timestamp_to_seconds(timestamp))
-                send_command_to_vlc(f"seek&val={timestamp_in_second}")
-            elif key.char == "l":
-                with self.index_lock:
-                    # 确保索引不会变成负数
-                    if self.current_index == 0:
-                        self.current_index = len(self.timestamps) - 1
-                    else:
-                        self.current_index -= 1
-                    timestamp = self.timestamps[self.current_index]
-
-                print("Rewinding to timestamp:", timestamp)
-                timestamp_in_second = int(timestamp_to_seconds(timestamp))
-                send_command_to_vlc(f"seek&val={timestamp_in_second}")
-            elif key.char == "n":
-                self.vlc_process.kill()
-                self.listener.stop()
-                return False
-        except AttributeError:
-            pass
+                elif key.char == "l":  # 向右跳转
+                    current_timestamp = get_current_vlc_timestamp()
+                    self.jump_to_nearest_timestamp(
+                        current_timestamp, direction="right"
+                    )
+                elif key.char == "n":
+                    self.vlc_process.kill()
+                    self.listener.stop()
+                    return False
+        except AttributeError as e:
+            print(f"异常捕获: {e}")  # 调试异常
 
 
 def main(file_path):
