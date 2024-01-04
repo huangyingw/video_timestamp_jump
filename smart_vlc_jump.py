@@ -163,12 +163,12 @@ class VLCController:
         print(f"按键被按下: {key}")  # 调试信息
         try:
             if hasattr(key, "char"):
-                if key.char == "h":  # 向左跳转
+                if key.char == "l":  # 向左跳转
                     current_timestamp = get_current_vlc_timestamp()
                     self.jump_to_nearest_timestamp(
                         current_timestamp, direction="left"
                     )
-                elif key.char == "l":  # 向右跳转
+                elif key.char == "h":  # 向右跳转
                     current_timestamp = get_current_vlc_timestamp()
                     self.jump_to_nearest_timestamp(
                         current_timestamp, direction="right"
