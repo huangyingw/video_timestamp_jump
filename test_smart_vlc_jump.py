@@ -47,6 +47,26 @@ class TestVideoPlayerFunctions(unittest.TestCase):
         ]
         self.assertEqual(extract_timestamps(filename), expected_timestamps)
 
+    def test_get_video_length():
+        # 替换为实际测试视频文件的路径
+        test_video_file = (
+            "/Users/huangyingw/mini/media/usb_backup_crypt_8T_1/cartoon/"
+            "./dragonball/第一部/龙珠 第一部 日语配音/七龙珠146.rmvb:13:57,:09:56"
+        )
+
+        # 预期的视频长度（秒），需要根据实际测试视频的长度进行替换
+        expected_length = "23:39"  # 假设测试视频长度为2分钟，即120秒
+
+        # 调用 get_video_length 函数获取视频长度
+        actual_length = get_video_length(test_video_file)
+
+        # 检查实际长度是否接近预期长度（可以允许一定的误差，例如±1秒）
+        assert (
+            abs(actual_length - expected_length) <= 1
+        ), f"Expected length: {expected_length}, but got: {actual_length}"
+
+        print("测试通过：视频长度匹配")
+
 
 # 运行单元测试
 if __name__ == "__main__":
