@@ -28,7 +28,6 @@ def extract_timestamps(filename):
 
     # 添加视频开始和结束时间
     timestamps.insert(0, "0:00")
-    timestamps.append("8:00:00")
     # 将时间戳转换为秒并排序
     return sorted(timestamps, key=timestamp_to_seconds)
 
@@ -114,10 +113,11 @@ class VLCController:
         self.file_path = file_path
         self.timestamps = extract_timestamps(file_path)
         self.current_index = 0
-        self.file_path = file_path
-        self.timestamps = extract_timestamps(file_path)
-        self.current_index = 0
         self.index_lock = Lock()
+
+        # 终止已有的 VLC 进程
+        if hasattr(self, "vlc_process") and self.vlc_process.poll() is None:
+            self.vlc_process.kill()
 
         # 准备 VLC 的启动参数
         vlc_args = [
@@ -138,6 +138,9 @@ class VLCController:
             stderr=subprocess.DEVNULL,  # 将标准错误重定向到 DEVNULL
         )
 
+        # 重启键盘监听器
+        if hasattr(self, "listener"):
+            self.listener.stop()
         self.listener = keyboard.Listener(on_press=self.on_press)
         self.listener.start()
 
@@ -150,12 +153,12 @@ class VLCController:
         nearest_timestamp_index = find_nearest_timestamp_index(
             timestamps, current_seconds, direction
         )
-        print(
-            f"最近的时间戳索引为 {nearest_timestamp_index}, 时间戳: {timestamps[nearest_timestamp_index]}"
-        )
 
         # 如果找到有效的时间戳索引
         if nearest_timestamp_index is not None:
+            print(
+                f"最近的时间戳索引为 {nearest_timestamp_index}, 时间戳: {timestamps[nearest_timestamp_index]}"
+            )
             # 跳转到该时间戳
             jump_to_timestamp(timestamps[nearest_timestamp_index])
 
@@ -173,7 +176,7 @@ class VLCController:
                     self.jump_to_nearest_timestamp(
                         current_timestamp, direction="right"
                     )
-                elif key.char == "n":
+                elif key.char in ["m", "n"]:  # 结束 VLC 进程和监听器
                     self.vlc_process.kill()
                     self.listener.stop()
                     return False
