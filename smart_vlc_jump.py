@@ -26,8 +26,6 @@ def extract_timestamps(filename):
     pattern = r"[:,](\d{1,2}:\d{2}(?::\d{2})?)"
     timestamps = re.findall(pattern, filename)
 
-    # 添加视频开始和结束时间
-    timestamps.insert(0, "0:00")
     # 将时间戳转换为秒并排序
     return sorted(timestamps, key=timestamp_to_seconds)
 
